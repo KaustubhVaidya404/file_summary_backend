@@ -20,9 +20,25 @@ def upload_file(request):
         serializerobj.save()
         file_ext = obj.name.split('.')[-1]
         if file_ext == 'csv':
-            return Response(serializerobj.data, status=status.HTTP_201_CREATED)
+            df = pd.read_csv(obj)
+            states = []
+            for state in df['Cust State'].unique():
+                states.append({
+                    "state": state,
+                    "count": df[df['Cust State'] == state].value_counts().sum(),
+                    "avg_dpd": df[df['Cust State'] == state]['DPD'].mean()
+                })
+            return Response(states, status=status.HTTP_201_CREATED) 
         elif file_ext in ['xlsx', 'xls']:
-            return Response(serializerobj.data, status=status.HTTP_201_CREATED)   
+            df = pd.read_excel(obj)
+            states = []
+            for state in df['Cust State'].unique():
+                states.append({
+                    "state": state,
+                    "count": df[df['Cust State'] == state].value_counts().sum(),
+                    "avg_dpd": df[df['Cust State'] == state]['DPD'].mean()
+                })
+            return Response(states, status=status.HTTP_201_CREATED)   
         else:
             return Response(serializerobj.errors, status=status.HTTP_400_BAD_REQUEST)  
     return Response(serializerobj.errors, status=status.HTTP_400_BAD_REQUEST)
